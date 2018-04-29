@@ -2,7 +2,7 @@
 from random import randint
 
 
-MAXVALUE = 30
+MAXVALUE = 100
 N = 30
 
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from random import random, randrange
 from typing import List
+from plotting import plot
+
 
 MAXVALUE = 100
 N = 30
@@ -8,10 +10,15 @@ WEIGHTLIMIT = N*MAXVALUE/4
 POOLSIZE = 30
 LASTG = 50
 MRATE = 0.01
-YES = True
-NO = False
+YES = 1
+NO = 0
 
-parcel = [[0, 0] for _ in range(N)]
+parcel = [[0 for _ in range(2)] for _ in range(N)]
+pts1 = set()
+pts2 = set()
+count1 = 0
+GRAPESIZE = 1200
+GPL = GRAPESIZE/LASTG
 
 
 def main() -> int:
@@ -19,16 +26,19 @@ def main() -> int:
     ngpool = [[0 for _ in range(N)] for _ in range(POOLSIZE*2)]
     initparcel()
     initpool(pool)
-    for generation in range(LASTG):
-        print('%d generation' % generation)
+    for generation in range(1, LASTG+1):
+        print('%dth generation' % generation)
         mating(pool, ngpool)
         mutation(ngpool)
         selectng(ngpool, pool)
         printp(pool)
+    plot(pts1, GRAPESIZE, 2)
+    plot(pts2, GRAPESIZE, 1)
     return 0
 
 
 def initparcel() -> None:
+    global parcel
     for i in range(N):
         parcel[i][0], parcel[i][1] = [int(x) for x in input().split(' ')]
 
@@ -55,7 +65,7 @@ def selectp(roulette: List[int], totalfitness: int) -> int:
     ball = randrange(totalfitness)
     for i in range(POOLSIZE):
         acc += roulette[i]
-        if (acc > ball):
+        if acc > ball:
             break
     return i
 
@@ -80,7 +90,7 @@ def crossing(m: List[int], p: List[int], c1: List[int], c2: List[int]) -> None:
     for j in range(cp):
         c1[j] = m[j]
         c2[j] = p[j]
-    for j in range(N):
+    for j in range(cp, N):
         c2[j] = m[j]
         c1[j] = p[j]
 
@@ -101,16 +111,17 @@ def printp(pool: List[List[int]]) -> None:
     elite = 0
     bestfit = 0
     for i in range(POOLSIZE):
-        #for j in range(N):
-        #    print('%1d' % pool[i][j], end='')
         fitness = evalfit(pool[i])
-        #print('\t%d' % fitness)
+        #print('%s\t%d' % (''.join('%1d' % x for x in pool[i]), fitness))
         if (fitness > bestfit):
             bestfit = fitness
             elite = i
         totalfitness += fitness
-    print('%d\t%d \t' % (elite, bestfit), end='')
-    print('%lf' % (totalfitness / POOLSIZE))
+    print('%d\t%d \t%lf' % (elite, bestfit, totalfitness/POOLSIZE))
+    global count1
+    count1 += GPL
+    pts1.add(count1 + 1j * bestfit)
+    pts2.add(count1 + 1j * totalfitness/POOLSIZE)
 
 
 def initpool(pool: List[List[int]]) -> None:
@@ -119,15 +130,15 @@ def initpool(pool: List[List[int]]) -> None:
             pool[i][j] = randrange(2)
 
 
-def mutation(ngpool: List[List[int]]) -> int:
-    for i in range(POOLSIZE):
+def mutation(ngpool: List[List[int]]) -> None:
+    for i in range(POOLSIZE*2):
         for j in range(N):
             if random() <= MRATE:
                 ngpool[i][j] = notval(ngpool[i][j])
 
 
 def notval(v: int) -> int:
-    return NO if v else YES
+    return NO if v == YES else YES
 
 
 if __name__ == '__main__':
